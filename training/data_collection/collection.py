@@ -1,0 +1,24 @@
+import cv2
+import numpy as np
+import os
+
+# Enter folder, make folder, then take input in loop
+
+ip_webcam = input('Webcam IP: ')
+category = input('Image folder: ')
+
+if not os.path.exists(os.path.join(os.getcwd(), category)):
+    os.mkdir(category)
+
+ply_number = 1
+while True:
+    cap = cv2.VideoCapture(f'http://{ip_webcam}/video')
+    ret, frame = cap.read()
+    if not ret:
+        print('End')
+        break
+    key = input(f'Move {ply_number} image: ')
+    if key == 'quit':
+        break
+    cv2.imwrite(os.path.join(os.getcwd(), category, f'{ply_number}.png'), frame)
+    ply_number += 1
