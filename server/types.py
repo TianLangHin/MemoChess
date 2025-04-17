@@ -1,3 +1,5 @@
+from enum import Enum
+
 # This exception is thrown when there is no way to
 # reliably read the board state at all.
 class ImageConversionException(Exception):
@@ -15,3 +17,9 @@ class MoveIllegalException(Exception):
 # in a way that does not match a legal move.
 class MoveImpossibleException(Exception):
     pass
+
+GameResumeOutcome = Enum('GameResumeOutcome', [
+    'ExactMatch',
+    'InexactMatch',
+    'PossibleMoveMade',
+])

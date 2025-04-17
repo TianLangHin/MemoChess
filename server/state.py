@@ -1,5 +1,5 @@
 import chess
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from server.types import MoveIllegalException, MoveImpossibleException
 
@@ -9,15 +9,16 @@ def piece_list(b: chess.Board) -> List[Optional[chess.Piece]]:
 def colour_list(pl: List[Optional[chess.Piece]]) -> List[Optional[chess.Color]]:
     return [None if p is None else p.color for p in pl]
 
+# The second item of the return tuple is whether an exact match was detected or not.
 def find_valid_move(
         prev_state: chess.Board,
-        new_state: List[Optional[chess.Piece]]) -> Optional[chess.Move]:
+        new_state: List[Optional[chess.Piece]]) -> Tuple[Optional[chess.Move], bool]:
     prev_piece_list = piece_list(prev_state)
 
     # Firstly, if the pieces are detected to be exactly the same,
     # we register that no move has been made.
     if prev_piece_list == new_state:
-        return None
+        return None, True
 
     # Next, we check if there exists a legal move that can be made
     # that will give us exactly what we see right now.
@@ -26,7 +27,7 @@ def find_valid_move(
         match_found = piece_list(prev_state) == new_state
         prev_state.pop()
         if match_found:
-            return move
+            return move, True
 
     # Now, we check whether the occupancies are about the same.
     # We consider "about the same" to be if the predicted piece colours
@@ -36,7 +37,7 @@ def find_valid_move(
 
     # If the colours are seen to be the same, we consider no move being made.
     if prev_state_colour == new_state_colour:
-        return None
+        return None, False
 
     # Next, we check if there is a legal move that can achieve this form.
     # We assume the first one we see is the only possible one,
@@ -46,7 +47,7 @@ def find_valid_move(
         match_found = colour_list(piece_list(prev_state)) == new_state_colour
         prev_state.pop()
         if match_found:
-            return move
+            return move, False
 
     # Finally, we see if a single piece has been moved.
     # We define this as "if there is a colour such that one of its pieces is moved,
