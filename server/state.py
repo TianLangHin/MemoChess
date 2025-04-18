@@ -60,6 +60,6 @@ def find_valid_move(
         destination = new_occupancies - intersection
         if len(origin) == 1 and len(destination) == 1:
             illegal_move = chess.Move(origin.pop(), destination.pop()).uci()
-            raise MoveIllegalException(f'Illegal move made: {illegal_move}')
+            raise MoveIllegalException('Illegal move made: ', illegal_move)
 
     raise MoveImpossibleException('No legal move found for this transition')
