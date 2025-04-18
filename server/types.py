@@ -1,3 +1,4 @@
+from collections import namedtuple
 from enum import Enum
 
 # This exception is thrown when there is no way to
@@ -23,3 +24,5 @@ GameResumeOutcome = Enum('GameResumeOutcome', [
     'InexactMatch',
     'PossibleMoveMade',
 ])
+
+MoveState = namedtuple('MoveState', ['move', 'exact', 'error'])
