@@ -4,14 +4,22 @@ import './App.css'
 
 import { BoardView } from './components/BoardView.tsx'
 
+const SERVER_IP = '127.0.0.1:5000'
+
 function App() {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
   const [capture, setCapture] = useState(false)
+  const [continuing, setContinuing] = useState(false)
   const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
   const [webcamUrl, setWebcamUrl] = useState('192.168.1.47:8080')
 
   const updateWebcamUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWebcamUrl(event.currentTarget.value)
+  }
+
+  const toggleCaptureButton = () => {
+    setCapture(capturing => !capturing)
+    setContinuing(false)
   }
 
   // Every 2 seconds, poll the server for both the video feed and updated board.
@@ -21,33 +29,54 @@ function App() {
       if (!capture)
         return
 
-      // Clear out previous blobs to avoid memory leaks.
-      if (blobUrl !== undefined)
-        URL.revokeObjectURL(blobUrl)
-
       // Provide the webcam IP.
-      const params = new URLSearchParams({ webcam: webcamUrl })
+      const webcamParams = new URLSearchParams({ webcam: webcamUrl })
 
-      // Fetch the image from the server...
-      fetch('http://127.0.0.1:5000/video?' + params.toString())
-        .then(response => response.blob())
-        .then(blob => {
-          setBlobUrl(URL.createObjectURL(blob))
-        })
-        .catch(() => null)
+      if (continuing) {
+        // Clear out previous blobs to avoid memory leaks.
+        if (blobUrl !== undefined)
+          URL.revokeObjectURL(blobUrl)
 
-      // And then also fetch the updated board state.
-      // Note that this means the server is state-ful.
-      fetch('http://127.0.0.1:5000/board')
-        .then(response => response.json())
-        .then(json => {
-          setFen(json.fen)
-        })
-        .catch(() => null)
+        fetch(`http://${SERVER_IP}/continue?` + webcamParams.toString())
+          .then(response => response.blob())
+          .then(blob => {
+            setBlobUrl(URL.createObjectURL(blob))
+          })
+
+        fetch(`http://${SERVER_IP}/lastmove`)
+          .then(response => response.json())
+          .then(json => {
+            if (json.error === null) {
+              setFen(json.fen)
+              if (json.status !== '*') {
+                alert(json.status)
+              }
+            }
+          })
+
+      } else {
+
+        // If not "continuing" a game, we are instead "resuming" from a position.
+        fetch(`http://${SERVER_IP}/resume?` + webcamParams.toString())
+          .then(response => response.json())
+          .then(json => {
+            if (json.error === null) {
+              console.log(`Exact match: ${json.exact}`)
+              setContinuing(true)
+            } else {
+              console.log(`Error: ${json.error}`)
+              setCapture(false)
+              setContinuing(false)
+            }
+          })
+          .catch(() => {})
+      }
 
     }, 2000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+    }
 
   }, [capture])
 

@@ -6,6 +6,12 @@ import cv2
 import io
 import numpy as np
 import random
+from ultralytics import YOLO
+
+from server.api import continuing_game, resuming_game
+from server.types import *
+
+MODEL = YOLO('models/trained_yolo11n-v0-0-0.pt')
 
 random.seed(19937)
 
@@ -13,38 +19,94 @@ app = Flask(__name__)
 CORS(app)
 
 GLOBAL_BOARD_STATE = chess.Board()
+CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
+
+def get_image_capture_and_blob(webcam_ip):
+    cap = cv2.VideoCapture(f'http://{webcam_ip}/video')
+    if cap.isOpened():
+        ret, frame = cap.read()
+        if ret:
+            _, raw_image_blob = cv2.imencode('.png', frame)
+            return raw_image_blob, frame
+    return None
 
 @app.route('/')
 def root():
     return jsonify({'memo-chess': True})
 
+# This endpoint returns just the frame captured by the IP webcam.
 @app.route('/video')
 def video():
     webcam = request.args.get('webcam')
-    cap = cv2.VideoCapture(f'http://{webcam}/video')
-    if cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            _, raw_image_blob = cv2.imencode('.png', frame)
-            image_file = io.BytesIO(raw_image_blob.tobytes())
+    image_capture = get_image_capture_and_blob(webcam)
+    if image_capture is None:
+        # Just send a black screen if not recording.
+        array = np.zeros([1080, 1920, 3], dtype=np.uint8)
+        _, array = cv2.imencode('.png', array)
+        return send_file(io.BytesIO(array.tobytes()), mimetype='image/png')
+    else:
+        blob, frame = image_capture
+        return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
 
-            # Stub move logic here. Mutates global state.
-            move = random.choice(list(GLOBAL_BOARD_STATE.legal_moves))
-            GLOBAL_BOARD_STATE.push(move)
-            # End global state mutation.
+# This endpoint will attempt to find the move played from a previous position.
+# Will mutate the global state.
+@app.route('/continue')
+def endpoint_continue():
+    global CURRENT_MOVE_STATE
+    webcam = request.args.get('webcam')
+    image_capture = get_image_capture_and_blob(webcam)
+    if image_capture is None:
+        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error='no-capture')
+        # Just send a black screen if not recording.
+        array = np.zeros([1080, 1920, 3], dtype=np.uint8)
+        _, array = cv2.imencode('.png', array)
+        return send_file(io.BytesIO(array.tobytes()), mimetype='image/png')
+    blob, frame = image_capture
+    try:
+        (move, exact), pred_image = continuing_game(GLOBAL_BOARD_STATE, MODEL, frame)
+        CURRENT_MOVE_STATE = MoveState(move=move, exact=exact, error=None)
+        GLOBAL_BOARD_STATE.push(move)
+        return send_file(io.BytesIO(pred_image.tobytes()), mimetype='image/png')
+    except ImageConversionException:
+        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error='image-conversion')
+    except MoveIllegalException as err:
+        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=f'move-illegal-{err.args[1]}')
+    except MoveImpossibleException:
+        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error='move-impossible')
+    return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
 
-            return send_file(image_file, mimetype='image/png')
+@app.route('/lastmove')
+def endpoint_lastmove():
+    return jsonify({
+        'move': CURRENT_MOVE_STATE.move,
+        'exact': CURRENT_MOVE_STATE.exact,
+        'error': CURRENT_MOVE_STATE.error,
+        'fen': GLOBAL_BOARD_STATE.fen(),
+        'status': GLOBAL_BOARD_STATE.result(),
+        'repetition': GLOBAL_BOARD_STATE.is_repetition(),
+    })
 
-    array = np.zeros([100, 200, 3], dtype=np.uint8)
-    array[:,:100] = [255, 128, 0]
-    array[:,100:] = [0, 0, 255]
-    _, array = cv2.imencode('.png', array)
-    return send_file(io.BytesIO(array.tobytes()), mimetype='image/png')
-
-@app.route('/board')
-def board():
-    return jsonify({'fen': GLOBAL_BOARD_STATE.fen()})
+@app.route('/resume')
+def endpoint_resume():
+    webcam = request.args.get('webcam')
+    image_capture = get_image_capture_and_blob(webcam)
+    if image_capture is None:
+        return jsonify({'error': 'no-capture'})
+    try:
+        blob, frame = image_capture
+        match resuming_game(GLOBAL_BOARD_STATE, MODEL, frame)[0]:
+            case GameResumeOutcome.ExactMatch:
+                return jsonify({'error': None, 'exact': True})
+            case GameResumeOutcome.InexactMatch:
+                return jsonify({'error': None, 'exact': False})
+            case GameResumeOutcome.PossibleMoveMade:
+                return jsonify({'error': 'possible-move-made'})
+    except ImageConversionException:
+        return jsonify({'error': 'image-conversion'})
+    except MoveIllegalException as err:
+        return jsonify({'error': 'move-illegal-' + err.args[1]})
+    except MoveImpossibleException:
+        return jsonify({'error': 'move-impossible'})
 
 if __name__ == '__main__':
     app.run()
