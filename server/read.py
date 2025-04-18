@@ -42,7 +42,9 @@ def intersection_area(box_a: BoundingBox, box_b: BoundingBox) -> float:
 
     return x_overlap * y_overlap
 
-def yolo_image_to_board(model: YOLO, image: np.ndarray) -> List[Optional[chess.Piece]]:
+def yolo_image_to_board(
+        model: YOLO,
+        image: np.ndarray) -> Tuple[List[Optional[chess.Piece]], np.ndarray]:
 
     board_representation = [None] * 64
     # Coded to be little endian (for compatibility with `chess`)
@@ -50,6 +52,7 @@ def yolo_image_to_board(model: YOLO, image: np.ndarray) -> List[Optional[chess.P
 
     # We conduct the model inference here and extract the predictions.
     result = model.predict(image, imgsz=640, conf=0.25, verbose=False)[0]
+    result_plot = result.plot()
     boxes = result.boxes
     box_predictions = [
         BoxPrediction(result.names[cls.item()], conf, BoundingBox(*(i.item() for i in xywh)))
@@ -101,4 +104,4 @@ def yolo_image_to_board(model: YOLO, image: np.ndarray) -> List[Optional[chess.P
             board_representation[closest_square_name] = (piece_type, confidence)
 
     # Remove the confidence guesses at the end.
-    return [None if piece is None else piece[0] for piece in board_representation]
+    return [None if piece is None else piece[0] for piece in board_representation], result_plot
