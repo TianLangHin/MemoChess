@@ -6,6 +6,7 @@ import cv2
 import io
 import numpy as np
 import random
+from typing import Optional, Tuple
 from ultralytics import YOLO
 
 from server.api import continuing_game, resuming_game
@@ -21,7 +22,7 @@ CORS(app)
 GLOBAL_BOARD_STATE = chess.Board()
 CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
 
-def get_image_capture_and_blob(webcam_ip):
+def get_image_capture_and_blob(webcam_ip: str) -> Optional[Tuple[np.ndarray, np.ndarray]]:
     cap = cv2.VideoCapture(f'http://{webcam_ip}/video')
     if cap.isOpened():
         ret, frame = cap.read()
@@ -53,6 +54,7 @@ def video():
 @app.route('/continue')
 def endpoint_continue():
     global CURRENT_MOVE_STATE
+    print(GLOBAL_BOARD_STATE, CURRENT_MOVE_STATE)
     webcam = request.args.get('webcam')
     image_capture = get_image_capture_and_blob(webcam)
     if image_capture is None:
@@ -65,14 +67,18 @@ def endpoint_continue():
     try:
         (move, exact), pred_image = continuing_game(GLOBAL_BOARD_STATE, MODEL, frame)
         CURRENT_MOVE_STATE = MoveState(move=move, exact=exact, error=None)
-        GLOBAL_BOARD_STATE.push(move)
-        return send_file(io.BytesIO(pred_image.tobytes()), mimetype='image/png')
-    except ImageConversionException:
-        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error='image-conversion')
+        if move is not None:
+            GLOBAL_BOARD_STATE.push(move)
+        return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
+    except ImageConversionException as err:
+        CURRENT_MOVE_STATE = MoveState(
+            move=None, exact=True, error=['image-conversion', *err.args])
     except MoveIllegalException as err:
-        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=f'move-illegal-{err.args[1]}')
-    except MoveImpossibleException:
-        CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error='move-impossible')
+        CURRENT_MOVE_STATE = MoveState(
+            move=None, exact=True, error=[f'move-illegal', *err.args])
+    except MoveImpossibleException as err:
+        CURRENT_MOVE_STATE = MoveState(
+            move=None, exact=True, error=['move-impossible', *err.args])
     return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
 
 @app.route('/lastmove')

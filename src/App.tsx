@@ -78,7 +78,7 @@ function App() {
       clearInterval(interval)
     }
 
-  }, [capture])
+  }, [capture, continuing])
 
   return (
     <>

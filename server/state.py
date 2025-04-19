@@ -1,5 +1,5 @@
 import chess
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple, Union
 
 from server.types import MoveIllegalException, MoveImpossibleException
 
@@ -8,6 +8,18 @@ def piece_list(b: chess.Board) -> List[Optional[chess.Piece]]:
 
 def colour_list(pl: List[Optional[chess.Piece]]) -> List[Optional[chess.Color]]:
     return [None if p is None else p.color for p in pl]
+
+def occupancy_set(colour_map: List[Optional[chess.Color]], colour: chess.Color) -> Set[int]:
+    return {sq for sq in range(64) if colour_map[sq] == colour}
+
+def full_occupancy(colour_map: List[Optional[chess.Color]]) -> Set[int]:
+    return {sq for sq in range(64) if colour_map[sq] is not None}
+
+def sqn(sq: Union[int, Set[int]]) -> str:
+    if isinstance(sq, set):
+        return {sqn(s) for s in sq}
+    else:
+        return 'abcdefgh'[sq % 8] + '12345678'[sq // 8]
 
 # The second item of the return tuple is whether an exact match was detected or not.
 def find_valid_move(
@@ -62,4 +74,42 @@ def find_valid_move(
             illegal_move = chess.Move(origin.pop(), destination.pop()).uci()
             raise MoveIllegalException('Illegal move made: ', illegal_move)
 
+    true = full_occupancy(prev_state_colour)
+    pred = full_occupancy(new_state_colour)
+
+    if pred <= true:
+        # Only consider captures here.
+        for move in prev_state.legal_moves:
+            if prev_state.piece_at(move.to_square) is not None:
+                prev_state.push(move)
+                possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
+                prev_state.pop()
+                if pred <= possible_occ:
+                    return move, False
+        return None, False
+
+    allowed_destinations = {m.to_square for m in prev_state.legal_moves}
+
+    new_pieces = pred - true
+    if len(new_pieces) == 1:
+        dest = new_pieces.pop()
+        if dest not in allowed_destinations:
+            raise MoveImpossibleException(f'No piece can move to {dest}')
+        possible_origins = {m.from_square for m in prev_state.legal_moves if m.to_square == dest}
+        # Debatable to put this here. allows moves that bring the wrong piece over.
+        if len(possible_origins) == 1:
+            return chess.Move(possible_origins.pop(), dest), False
+        vacant_squares = possible_origins - pred
+        if len(vacant_squares) == 1:
+            return chess.Move(vacant_squares.pop(), dest), False
+        else:
+            raise MoveImpossibleException(
+                f'Which piece out of {sqn(vacant_squares)} moved to {sqn(dest)}?')
+    else:
+        for move in prev_state.legal_moves:
+            prev_state.push(move)
+            possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
+            prev_state.pop()
+            if pred <= possible_occ:
+                return move, False
     raise MoveImpossibleException('No legal move found for this transition')
