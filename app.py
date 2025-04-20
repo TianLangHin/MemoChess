@@ -83,8 +83,9 @@ def endpoint_continue():
 
 @app.route('/lastmove')
 def endpoint_lastmove():
+    move = CURRENT_MOVE_STATE.move
     return jsonify({
-        'move': CURRENT_MOVE_STATE.move,
+        'move': None if move is None else move.uci(),
         'exact': CURRENT_MOVE_STATE.exact,
         'error': CURRENT_MOVE_STATE.error,
         'fen': GLOBAL_BOARD_STATE.fen(),

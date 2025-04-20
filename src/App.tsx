@@ -8,6 +8,7 @@ const SERVER_IP = '127.0.0.1:5000'
 
 function App() {
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+  const [moveList, setMoveList] = useState<string[]>([])
   const [capture, setCapture] = useState(false)
   const [continuing, setContinuing] = useState(false)
   const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
@@ -48,6 +49,7 @@ function App() {
           .then(json => {
             if (json.error === null) {
               setFen(json.fen)
+              setMoveList(list => [...list, json.move])
               if (json.status !== '*') {
                 alert(json.status)
               }
@@ -81,16 +83,29 @@ function App() {
   }, [capture, continuing])
 
   return (
-    <>
-      <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
-      <button onClick={() => { setCapture(req => !req) }}>
-        { capture ? "Stop Capture" : "Start Capture" }
-      </button>
-      <BoardView url={blobUrl} />
-      <div style={{width: '400px', height: '400px'}}>
+    <div className="grid grid-cols-3 grid-rows-1 gap-4">
+      <div className="grid grid-col-1 grid-rows-2">
+        <BoardView url={blobUrl} />
+        <div className="grid grid-cols-2">
+          <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
+          <button onClick={toggleCaptureButton}>
+            { capture ? "Stop Capture" : "Start Capture" }
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-row-2">
         <Chessboard arePiecesDraggable={false} position={fen} />
       </div>
-    </>
+      <div className="grid grid-row-3 overflow-y-scroll">
+        {
+          moveList.map(move => {
+            return (
+              <p>{move}</p>
+            )
+          })
+        }
+      </div>
+    </div>
   )
 }
 
