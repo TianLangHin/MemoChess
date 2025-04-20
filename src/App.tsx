@@ -23,6 +23,15 @@ function App() {
     setContinuing(false)
   }
 
+  const undoLastMoveButton = () => {
+    fetch(`http://${SERVER_IP}/undolastmove`)
+      .then(response => response.json())
+      .then(json => {
+        setMoveList(list => list.slice(0, -1))
+        setFen(json.fen)
+      })
+  }
+
   // Every 2 seconds, poll the server for both the video feed and updated board.
   useEffect(() => {
     const interval = setInterval(() => {
@@ -83,29 +92,36 @@ function App() {
   }, [capture, continuing])
 
   return (
-    <div className="grid grid-cols-3 grid-rows-1 gap-4">
-      <div className="grid grid-col-1 grid-rows-2">
-        <BoardView url={blobUrl} />
-        <div className="grid grid-cols-2">
-          <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
-          <button onClick={toggleCaptureButton}>
-            { capture ? "Stop Capture" : "Start Capture" }
-          </button>
+    <>
+      <div className="container grid grid-cols-3 grid-rows-2 gap-4">
+        <div className="grid grid-col-1 row-span-2">
+          <BoardView url={blobUrl} />
+          <div className="grid grid-cols-2">
+            <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
+            <button onClick={toggleCaptureButton}>
+              { capture ? "Stop Capture" : "Start Capture" }
+            </button>
+          </div>
+        </div>
+        <div className="grid col-start-2 row-span-2">
+          <Chessboard arePiecesDraggable={false} position={fen} />
+        </div>
+        <div className="grid col-start-3 row-span-2 overflow-y-scroll">
+          {
+            moveList.map(move => {
+              return (
+                <p>{move}</p>
+              )
+            })
+          }
         </div>
       </div>
-      <div className="grid grid-row-2">
-        <Chessboard arePiecesDraggable={false} position={fen} />
+      <div>
+        <button onClick={undoLastMoveButton}>
+          Undo Move
+        </button>
       </div>
-      <div className="grid grid-row-3 overflow-y-scroll">
-        {
-          moveList.map(move => {
-            return (
-              <p>{move}</p>
-            )
-          })
-        }
-      </div>
-    </div>
+    </>
   )
 }
 
