@@ -5,14 +5,17 @@ import chess
 import cv2
 import io
 import numpy as np
+from PIL import Image
 import random
+import requests
 from typing import Optional, Tuple
 from ultralytics import YOLO
 
 from server.api import continuing_game, resuming_game
 from server.types import *
 
-MODEL = YOLO('models/trained_yolo11n-v0-0-0.pt')
+# Most recently trained model.
+MODEL = YOLO('models/trained_yolo11n-v0-1-1.pt')
 
 random.seed(19937)
 
@@ -22,13 +25,27 @@ CORS(app)
 GLOBAL_BOARD_STATE = chess.Board()
 CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
 
-def get_image_capture_and_blob(webcam_ip: str) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+def get_image_capture_and_blob(webcam_ip: str):
     cap = cv2.VideoCapture(f'http://{webcam_ip}/video')
     if cap.isOpened():
         ret, frame = cap.read()
         if ret:
             _, raw_image_blob = cv2.imencode('.png', frame)
             return raw_image_blob, frame
+    else:
+        # This branch is here to accommodate for HTTP servers
+        # that proxy a live streaming image feed,
+        # in case this app is to be tested without an IP camera.
+        try:
+            response = requests.get(f'http://{webcam_ip}/video')
+            if response.ok:
+                image_data = io.BytesIO(response.content)
+                image = Image.open(image_data)
+                frame = cv2.cvtColor(np.asarray(image), cv2.COLOR_BGR2RGB)
+                _, blob = cv2.imencode('.png', frame)
+                return blob, frame
+        except:
+            pass
     return None
 
 @app.route('/')
