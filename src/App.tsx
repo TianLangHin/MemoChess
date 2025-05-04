@@ -4,17 +4,38 @@ import './App.css'
 
 import { BoardView } from './components/BoardView.tsx'
 import { PopUp } from './components/PopUp.tsx'
+import { composePgn } from './utils/composePgn.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
 
 function App() {
+  // State relating to the current game state.
   const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
   const [moveList, setMoveList] = useState<string[]>([])
+
+  // State relating to the passing of feed to and from the client and server.
   const [capture, setCapture] = useState(false)
   const [continuing, setContinuing] = useState(false)
-  const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
   const [webcamUrl, setWebcamUrl] = useState('192.168.1.47:8080')
+  const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
+
+  // State relating to showing miscellaneous information.
   const [showPopUp, setShowPopUp] = useState(false)
+
+
+  // State relating to the game data for PGN download.
+  const downloadFen = () => {
+    const pgnContents = composePgn(moveList, 'White', 'Black', 'MemoChess', '*')
+    const blob = new Blob([pgnContents], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'game.pgn'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
 
   const updateWebcamUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWebcamUrl(event.currentTarget.value)
@@ -95,18 +116,24 @@ function App() {
 
   return (
     <>
-      <div className="right-[5%] top-[5%] fixed">
+      <div className="left-[5%] top-[5%] fixed">
         <button onClick={() => setShowPopUp(true)}>
-          Show Pop Up
+          About Us
         </button>
       </div>
       <div>
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
-          <h1>
-            Pop Up Here
-          </h1>
+          <h2>Our Team</h2>
+          <ol>
+            <li>Tian Lang Hin (24766127)</li>
+            <li>Duong Anh Tran (24775456)</li>
+            <li>Isabella Watt (24843322)</li>
+          </ol>
         </PopUp>
       </div>
+      <h1 className="p-[20px]">
+        MemoChess
+      </h1>
       <div className="container grid grid-cols-3 grid-rows-2 gap-4">
         <div className="grid grid-col-1 row-span-2">
           <BoardView url={blobUrl} />

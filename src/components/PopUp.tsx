@@ -6,10 +6,10 @@ export function PopUp(props: PopUpProps) {
     props.showPopUp ? (
       <div className="pop-up">
         <div className="pop-up-inner">
-          <button onClick={() => props.setShowPopUp(false)}>
-          Close
-          </button>
           { props.children }
+          <button onClick={() => props.setShowPopUp(false)}>
+            Close
+          </button>
         </div>
       </div>
     ) : (<></>)
