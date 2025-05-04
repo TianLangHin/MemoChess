@@ -3,6 +3,7 @@ import { Chessboard } from 'react-chessboard'
 import './App.css'
 
 import { BoardView } from './components/BoardView.tsx'
+import { PopUp } from './components/PopUp.tsx'
 
 const SERVER_IP = '127.0.0.1:5000'
 
@@ -13,6 +14,7 @@ function App() {
   const [continuing, setContinuing] = useState(false)
   const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
   const [webcamUrl, setWebcamUrl] = useState('192.168.1.47:8080')
+  const [showPopUp, setShowPopUp] = useState(false)
 
   const updateWebcamUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWebcamUrl(event.currentTarget.value)
@@ -93,6 +95,18 @@ function App() {
 
   return (
     <>
+      <div className="right-[5%] top-[5%] fixed">
+        <button onClick={() => setShowPopUp(true)}>
+          Show Pop Up
+        </button>
+      </div>
+      <div>
+        <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
+          <h1>
+            Pop Up Here
+          </h1>
+        </PopUp>
+      </div>
       <div className="container grid grid-cols-3 grid-rows-2 gap-4">
         <div className="grid grid-col-1 row-span-2">
           <BoardView url={blobUrl} />

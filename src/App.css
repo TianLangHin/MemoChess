@@ -42,3 +42,21 @@
 .read-the-docs {
   color: #888;
 }
+
+.pop-up {
+  position: fixed;
+  left: 35%;
+  right: 35%;
+  width: 30%;
+  top: 20%;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid black;
+  background-color: white;
+  z-index: 9000;
+}
+
+.inner {
+  color: black;
+}
