@@ -85,7 +85,7 @@ def endpoint_continue():
 def endpoint_lastmove():
     move = CURRENT_MOVE_STATE.move
     return jsonify({
-        'move': None if move is None else move.uci(),
+        'move': None if move is None else GLOBAL_BOARD_STATE.san(move),
         'exact': CURRENT_MOVE_STATE.exact,
         'error': CURRENT_MOVE_STATE.error,
         'fen': GLOBAL_BOARD_STATE.fen(),
