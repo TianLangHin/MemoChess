@@ -135,7 +135,7 @@ def endpoint_resume():
 
 @app.route('/undolastmove')
 def endpoint_undolastmove():
-    if len(GLOBAL_BOARD_STATE.move_stack()) > 0:
+    if len(GLOBAL_BOARD_STATE.move_stack) > 0:
         GLOBAL_BOARD_STATE.pop()
         CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
     return jsonify({'fen': GLOBAL_BOARD_STATE.fen()})
