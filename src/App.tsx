@@ -5,6 +5,7 @@ import './App.css'
 import { BoardView } from './components/BoardView.tsx'
 import { PopUp } from './components/PopUp.tsx'
 import { composePgn } from './utils/composePgn.ts'
+import { moveListDisplay, MoveTuple } from './utils/moveListDisplay.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
 
@@ -81,7 +82,13 @@ function App() {
           .then(json => {
             if (json.error === null) {
               setFen(json.fen)
-              setMoveList(list => [...list, json.move])
+              // Update the move if it is not a null move and if it is not a duplicate.
+              setMoveList(list => {
+                const shouldUpdateMove = json.move !== null &&
+                  (list.length === 0 || json.move !== list[list.length - 1])
+
+                return shouldUpdateMove ? [...list, json.move] : list
+              })
               if (json.status !== '*') {
                 alert(json.status)
               }
@@ -125,9 +132,9 @@ function App() {
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
           <h2>Our Team</h2>
           <ol>
-            <li>Tian Lang Hin (24766127)</li>
-            <li>Duong Anh Tran (24775456)</li>
-            <li>Isabella Watt (24843322)</li>
+            <li key="tlh">Tian Lang Hin (24766127)</li>
+            <li key="dat">Duong Anh Tran (24775456)</li>
+            <li key="iw">Isabella Watt (24843322)</li>
           </ol>
         </PopUp>
       </div>
@@ -149,11 +156,11 @@ function App() {
         </div>
         <div className="grid col-start-3 row-span-2 overflow-y-scroll">
           {
-            moveList.map(move => {
-              return (
-                <p>{move}</p>
-              )
-            })
+            moveListDisplay(moveList).map(item => (
+              <p key={item[0]} className="border-2 border-solid">
+                {`${item[0]}. ${item[1]} ${item[2]}`}
+              </p>
+            ))
           }
         </div>
       </div>
