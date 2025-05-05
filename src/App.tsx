@@ -23,6 +23,9 @@ function App() {
   // State relating to showing miscellaneous information.
   const [showPopUp, setShowPopUp] = useState(false)
 
+  // State relating to login mechanism.
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
 
   // State relating to the game data for PGN download.
   const downloadPgn = () => {
@@ -120,6 +123,26 @@ function App() {
     }
 
   }, [capture, continuing])
+
+  const handleLogin = () => {
+    setUsername(prompt('Username:'))
+    setPassword(prompt('Password:'))
+  }
+
+  if (username !== 'memochess' || password !== '42028a2025') {
+    return (
+      <>
+        <h1 className="p-15">
+          Please Login to use MemoChess.
+        </h1>
+        <button onClick={handleLogin} className="p-10">
+          <h2 className="text-lg">
+            Login
+          </h2>
+        </button>
+      </>
+    )
+  }
 
   return (
     <>
