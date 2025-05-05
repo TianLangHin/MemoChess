@@ -16,10 +16,10 @@ export function composePgn(
   event: string,
   result: string): string {
 
-  return ```[Event "${event}"]
+  return `[Event "${event}"]
 [White "${whitePlayer}"]
 [Black "${blackPlayer}"]
 [Result "${result}"]
 
-${pgnMoveList(moveList)} ${result === '*' ? '' : result}```
+${pgnMoveList(moveList)} ${result === '*' ? '' : result}`
 }

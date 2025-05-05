@@ -25,7 +25,7 @@ function App() {
 
 
   // State relating to the game data for PGN download.
-  const downloadFen = () => {
+  const downloadPgn = () => {
     const pgnContents = composePgn(moveList, 'White', 'Black', 'MemoChess', '*')
     const blob = new Blob([pgnContents], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
@@ -126,6 +126,11 @@ function App() {
       <div className="left-[5%] top-[5%] fixed">
         <button onClick={() => setShowPopUp(true)}>
           About Us
+        </button>
+      </div>
+      <div className="right-[5%] top-[5%] fixed">
+        <button onClick={downloadPgn}>
+          Download PGN
         </button>
       </div>
       <div>
