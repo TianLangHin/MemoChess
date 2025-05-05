@@ -71,7 +71,6 @@ def video():
 @app.route('/continue')
 def endpoint_continue():
     global CURRENT_MOVE_STATE
-    print(GLOBAL_BOARD_STATE, CURRENT_MOVE_STATE)
     webcam = request.args.get('webcam')
     image_capture = get_image_capture_and_blob(webcam)
     if image_capture is None:
@@ -83,8 +82,10 @@ def endpoint_continue():
     blob, frame = image_capture
     try:
         (move, exact), pred_image = continuing_game(GLOBAL_BOARD_STATE, MODEL, frame)
-        CURRENT_MOVE_STATE = MoveState(move=move, exact=exact, error=None)
-        if move is not None:
+        if move is None:
+            CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
+        else:
+            CURRENT_MOVE_STATE = MoveState(move=GLOBAL_BOARD_STATE.san(move), exact=exact, error=None)
             GLOBAL_BOARD_STATE.push(move)
         return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
     except ImageConversionException as err:
@@ -100,9 +101,9 @@ def endpoint_continue():
 
 @app.route('/lastmove')
 def endpoint_lastmove():
-    move = CURRENT_MOVE_STATE.move
     return jsonify({
-        'move': None if move is None else GLOBAL_BOARD_STATE.san(move),
+        # 'move': None if move is None else GLOBAL_BOARD_STATE.san(move),
+        'move': CURRENT_MOVE_STATE.move,
         'exact': CURRENT_MOVE_STATE.exact,
         'error': CURRENT_MOVE_STATE.error,
         'fen': GLOBAL_BOARD_STATE.fen(),
