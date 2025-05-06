@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 import './App.css'
 
@@ -26,6 +26,16 @@ function App() {
   // State relating to login mechanism.
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
+  // State relating to scrollable move list.
+  const scrollableRef = useRef(null)
+
+  useEffect(() => {
+    const element = scrollableRef.current
+    if (element) {
+      element.scrollTop = element.scrollHeight
+    }
+  }, [moveList])
 
   // State relating to the game data for PGN download.
   const downloadPgn = () => {
@@ -174,7 +184,7 @@ function App() {
           <BoardView url={blobUrl} />
           <div className="grid grid-cols-2">
             <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
-            <button onClick={toggleCaptureButton}>
+            <button className="px-4" onClick={toggleCaptureButton}>
               { capture ? "Stop Capture" : "Start Capture" }
             </button>
           </div>
@@ -182,14 +192,18 @@ function App() {
         <div className="grid col-start-2 row-span-2">
           <Chessboard arePiecesDraggable={false} position={fen} />
         </div>
-        <div className="grid col-start-3 row-span-2 overflow-y-scroll">
-          {
-            moveListDisplay(moveList).map(item => (
-              <p key={item[0]} className="border-2 border-solid">
-                {`${item[0]}. ${item[1]} ${item[2]}`}
-              </p>
-            ))
-          }
+        <div className="grid col-start-3 row-span-2">
+          <div ref={scrollableRef} className="overflow-y-scroll">
+            {
+              moveListDisplay(moveList).map(item => (
+                <div className="border-2 border-solid h-1/6">
+                  <p key={item[0]}>
+                    {`${item[0]}. ${item[1]} ${item[2]}`}
+                  </p>
+                </div>
+              ))
+            }
+          </div>
         </div>
       </div>
       <div>
