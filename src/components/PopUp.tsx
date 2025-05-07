@@ -5,7 +5,7 @@ export function PopUp(props: PopUpProps) {
   return (
     props.showPopUp ? (
       <div className="pop-up">
-        <div className="pop-up-inner">
+        <div>
           { props.children }
           <button onClick={() => props.setShowPopUp(false)}>
             Close

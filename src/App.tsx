@@ -210,11 +210,11 @@ function App() {
       </div>
       <div>
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
-          <h2>Our Team</h2>
+          <h2 className="text-4xl p-4">Our Team</h2>
           <ol>
-            <li key="tlh">Tian Lang Hin (24766127)</li>
-            <li key="dat">Duong Anh Tran (24775456)</li>
-            <li key="iw">Isabella Watt (24843322)</li>
+            <p className="text-black">Tian Lang Hin (24766127)</p>
+            <p className="text-black">Duong Anh Tran (24775456)</p>
+            <p className="text-black">Isabella Watt (24843322)</p>
           </ol>
         </PopUp>
       </div>
