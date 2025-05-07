@@ -57,6 +57,15 @@
   z-index: 9000;
 }
 
+.main-content {
+  min-height: 40vh;
+  max-height: 40vh;
+}
+
+input {
+  text-align: center;
+}
+
 .inner {
   color: black;
 }

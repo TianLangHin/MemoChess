@@ -4,6 +4,7 @@ import './App.css'
 
 import { BoardView } from './components/BoardView.tsx'
 import { PopUp } from './components/PopUp.tsx'
+import { useWindowHeight } from './components/WindowHeight.ts'
 import { composePgn } from './utils/composePgn.ts'
 import { moveListDisplay, MoveTuple } from './utils/moveListDisplay.ts'
 
@@ -17,7 +18,7 @@ function App() {
   // State relating to the passing of feed to and from the client and server.
   const [capture, setCapture] = useState(false)
   const [continuing, setContinuing] = useState(false)
-  const [webcamUrl, setWebcamUrl] = useState('192.168.1.47:8080')
+  const [webcamUrl, setWebcamUrl] = useState('')
   const [blobUrl, setBlobUrl] = useState<string | undefined>(undefined)
 
   // State relating to showing miscellaneous information.
@@ -37,9 +38,22 @@ function App() {
     }
   }, [moveList])
 
+  const windowHeight = useWindowHeight()
+
   // State relating to the game data for PGN download.
+  const [whitePlayer, setWhitePlayer] = useState('')
+  const [blackPlayer, setBlackPlayer] = useState('')
+
+  const updateWhitePlayer = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setWhitePlayer(event.currentTarget.value)
+  }
+
+  const updateBlackPlayer = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setBlackPlayer(event.currentTarget.value)
+  }
+
   const downloadPgn = () => {
-    const pgnContents = composePgn(moveList, 'White', 'Black', 'MemoChess', '*')
+    const pgnContents = composePgn(moveList, whitePlayer, blackPlayer, 'MemoChess', '*')
     const blob = new Blob([pgnContents], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -99,7 +113,6 @@ function App() {
               setMoveList(list => {
                 const shouldUpdateMove = json.move !== null &&
                   (list.length === 0 || json.move !== list[list.length - 1])
-
                 return shouldUpdateMove ? [...list, json.move] : list
               })
               if (json.status !== '*') {
@@ -179,24 +192,39 @@ function App() {
       <h1 className="p-[20px]">
         MemoChess
       </h1>
-      <div className="container grid grid-cols-3 grid-rows-2 gap-4">
+      <div className="container grid grid-cols-4 grid-rows-1 gap-2 p-2">
+        <h2 className="border-2">White Player</h2>
+        <input type="text" className="border-1"
+          placeholder="Enter White Player's Name..."
+          value={whitePlayer} onChange={updateWhitePlayer} />
+        <input type="text" className="border-1"
+          placeholder="Enter Black Player's Name..."
+          value={blackPlayer} onChange={updateBlackPlayer} />
+        <h2 className="border-2">Black Player</h2>
+      </div>
+      <div className="container grid grid-cols-3 grid-rows-2 gap-4 main-content">
         <div className="grid grid-col-1 row-span-2">
           <BoardView url={blobUrl} />
           <div className="grid grid-cols-2">
-            <input type="text" value={webcamUrl} onChange={updateWebcamUrl} />
+            <input type="text" className="border-2"
+              placeholder="IP Webcam Address"
+              value={webcamUrl} onChange={updateWebcamUrl} />
             <button className="px-4" onClick={toggleCaptureButton}>
               { capture ? "Stop Capture" : "Start Capture" }
             </button>
           </div>
         </div>
-        <div className="grid col-start-2 row-span-2">
-          <Chessboard arePiecesDraggable={false} position={fen} />
+        <div>
+          <Chessboard
+            arePiecesDraggable={false}
+            position={fen}
+            boardWidth={0.4 * windowHeight} />
         </div>
         <div className="grid col-start-3 row-span-2">
           <div ref={scrollableRef} className="overflow-y-scroll">
             {
               moveListDisplay(moveList).map(item => (
-                <div className="border-2 border-solid h-1/6">
+                <div className="h-1/8 text-2xl">
                   <p key={item[0]}>
                     {`${item[0]}. ${item[1]} ${item[2]}`}
                   </p>
