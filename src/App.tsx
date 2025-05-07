@@ -52,8 +52,34 @@ function App() {
     setBlackPlayer(event.currentTarget.value)
   }
 
+  const [gameOutcome, setGameOutcome] = useState('*')
+
+  const handleWhiteResign = () => {
+    if (gameOutcome !== '*')
+      return
+    setGameOutcome('0-1')
+    setCapture(false)
+    setContinuing(false)
+  }
+
+  const handleGameDraw = () => {
+    if (gameOutcome !== '*')
+      return
+    setGameOutcome('1/2-1/2')
+    setCapture(false)
+    setContinuing(false)
+  }
+
+  const handleBlackResign = () => {
+    if (gameOutcome !== '*')
+      return
+    setGameOutcome('1-0')
+    setCapture(false)
+    setContinuing(false)
+  }
+
   const downloadPgn = () => {
-    const pgnContents = composePgn(moveList, whitePlayer, blackPlayer, 'MemoChess', '*')
+    const pgnContents = composePgn(moveList, whitePlayer, blackPlayer, 'MemoChess', gameOutcome)
     const blob = new Blob([pgnContents], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -116,7 +142,10 @@ function App() {
                 return shouldUpdateMove ? [...list, json.move] : list
               })
               if (json.status !== '*') {
-                alert(json.status)
+                setGameOutcome(json.status)
+                setCapture(false)
+                setContinuing(false)
+                alert(`Game has concluded. Result: ${json.status}.`)
               }
             }
           })
@@ -192,6 +221,11 @@ function App() {
       <h1 className="p-[20px]">
         MemoChess
       </h1>
+      <p>
+        {
+          (gameOutcome !== '*') && `Result: ${gameOutcome}`
+        }
+      </p>
       <div className="container grid grid-cols-4 grid-rows-1 gap-2 p-2">
         <h2 className="border-2">White Player</h2>
         <input type="text" className="border-1"
@@ -233,6 +267,17 @@ function App() {
             }
           </div>
         </div>
+      </div>
+      <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-2">
+        <button className="p-4" onClick={handleWhiteResign}>
+          White Resigns
+        </button>
+        <button className="p-4" onClick={handleGameDraw}>
+          Draw Game
+        </button>
+        <button className="p-4" onClick={handleBlackResign}>
+          Black Resigns
+        </button>
       </div>
       <div>
         <button onClick={undoLastMoveButton}>
