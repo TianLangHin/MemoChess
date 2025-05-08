@@ -199,7 +199,7 @@ function App() {
   return (
     <>
       <div className="left-[5%] top-[5%] fixed">
-        <button onClick={() => setShowPopUp(true)}>
+        <button onClick={() => setShowPopUp(!showPopUp)}>
           About Us
         </button>
       </div>
@@ -239,7 +239,7 @@ function App() {
       <div className="container grid grid-cols-3 grid-rows-2 gap-4 main-content">
         <div className="grid grid-col-1 row-span-2">
           <BoardView url={blobUrl} />
-          <div className="grid grid-cols-2">
+          <div className="grid grid-cols-2 px-2 gap-2">
             <input type="text" className="border-2"
               placeholder="IP Webcam Address"
               value={webcamUrl} onChange={updateWebcamUrl} />
