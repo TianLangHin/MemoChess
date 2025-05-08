@@ -185,7 +185,7 @@ function App() {
     return (
       <>
         <h1 className="p-15">
-          Please Login to use MemoChess.
+          Please login to use MemoChess.
         </h1>
         <button onClick={handleLogin} className="p-10">
           <h2 className="text-lg">
@@ -210,7 +210,7 @@ function App() {
       </div>
       <div>
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
-          <h2 className="text-4xl p-4">Our Team</h2>
+          <h2 className="text-black text-4xl p-4">Our Team</h2>
           <ol>
             <p className="text-black">Tian Lang Hin (24766127)</p>
             <p className="text-black">Duong Anh Tran (24775456)</p>
@@ -248,7 +248,7 @@ function App() {
             </button>
           </div>
         </div>
-        <div>
+        <div className="grid col-start-2 row-span-2 flex justify-center items-center">
           <Chessboard
             arePiecesDraggable={false}
             position={fen}
@@ -268,7 +268,7 @@ function App() {
           </div>
         </div>
       </div>
-      <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-2">
+      <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-5">
         <button className="p-4" onClick={handleWhiteResign}>
           White Resigns
         </button>
