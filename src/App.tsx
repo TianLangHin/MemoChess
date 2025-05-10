@@ -128,26 +128,25 @@ function App() {
           .then(response => response.blob())
           .then(blob => {
             setBlobUrl(URL.createObjectURL(blob))
-          })
-
-        fetch(`http://${SERVER_IP}/lastmove`)
-          .then(response => response.json())
-          .then(json => {
-            if (json.error === null) {
-              setFen(json.fen)
-              // Update the move if it is not a null move and if it is not a duplicate.
-              setMoveList(list => {
-                const shouldUpdateMove = json.move !== null &&
-                  (list.length === 0 || json.move !== list[list.length - 1])
-                return shouldUpdateMove ? [...list, json.move] : list
+            fetch(`http://${SERVER_IP}/lastmove`)
+              .then(response => response.json())
+              .then(json => {
+                if (json.error === null) {
+                  setFen(json.fen)
+                  // Update the move if it is not a null move and if it is not a duplicate.
+                  setMoveList(list => {
+                    const shouldUpdateMove = json.move !== null &&
+                      (list.length === 0 || json.move !== list[list.length - 1])
+                    return shouldUpdateMove ? [...list, json.move] : list
+                  })
+                  if (json.status !== '*') {
+                    setGameOutcome(json.status)
+                    setCapture(false)
+                    setContinuing(false)
+                    alert(`Game has concluded. Result: ${json.status}.`)
+                  }
+                }
               })
-              if (json.status !== '*') {
-                setGameOutcome(json.status)
-                setCapture(false)
-                setContinuing(false)
-                alert(`Game has concluded. Result: ${json.status}.`)
-              }
-            }
           })
 
       } else {

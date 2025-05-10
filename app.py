@@ -93,7 +93,7 @@ def endpoint_continue():
             move=None, exact=True, error=['image-conversion', *err.args])
     except MoveIllegalException as err:
         CURRENT_MOVE_STATE = MoveState(
-            move=None, exact=True, error=[f'move-illegal', *err.args])
+            move=None, exact=True, error=['move-illegal', *err.args])
     except MoveImpossibleException as err:
         CURRENT_MOVE_STATE = MoveState(
             move=None, exact=True, error=['move-impossible', *err.args])
