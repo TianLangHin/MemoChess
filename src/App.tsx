@@ -155,7 +155,7 @@ function App() {
         fetch(`http://${SERVER_IP}/resume?` + webcamParams.toString())
           .then(response => response.json())
           .then(json => {
-            if (json.error === null) {
+            if (json.error === null || json.error === 'possible-move-made') {
               console.log(`Exact match: ${json.exact}`)
               setContinuing(true)
             } else {
@@ -279,8 +279,26 @@ function App() {
         </button>
       </div>
       <div>
-        <button onClick={undoLastMoveButton}>
+        <button onClick={undoLastMoveButton} className="m-1">
           Undo Move
+        </button>
+        <button onClick={() => {
+          const uciMove = prompt('Please enter the move played in UCI notation:')
+          const params = new URLSearchParams({ uci: uciMove })
+          fetch(`http://${SERVER_IP}/override?` + params.toString())
+            .then(response => response.json())
+            .then(json => {
+              if (json.valid) {
+                setFen(json.fen)
+                setMoveList(list => [...list, json.san])
+              } else {
+                alert('Illegal move entered.')
+              }
+            })
+          setCapture(false)
+          setContinuing(false)
+        }} className="m-1">
+          Override Move
         </button>
       </div>
     </>
