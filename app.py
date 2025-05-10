@@ -134,6 +134,7 @@ def endpoint_resume():
 
 @app.route('/undolastmove')
 def endpoint_undolastmove():
+    global GLOBAL_BOARD_STATE, CURRENT_MOVE_STATE
     if len(GLOBAL_BOARD_STATE.move_stack) > 0:
         GLOBAL_BOARD_STATE.pop()
         CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
@@ -151,6 +152,13 @@ def endpoint_override():
         return jsonify({'valid': True, 'san': san, 'fen': fen})
     else:
         return jsonify({'valid': False})
+
+@app.route('/reset')
+def endpoint_reset():
+    global GLOBAL_BOARD_STATE, CURRENT_MOVE_STATE
+    GLOBAL_BOARD_STATE = chess.Board()
+    CURRENT_MOVE_STATE = MoveState(move=None, exact=True, error=None)
+    return jsonify({'fen': GLOBAL_BOARD_STATE.fen()})
 
 if __name__ == '__main__':
     app.run()

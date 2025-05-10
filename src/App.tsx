@@ -145,6 +145,17 @@ function App() {
                     setContinuing(false)
                     alert(`Game has concluded. Result: ${json.status}.`)
                   }
+                } else {
+                  setCapture(false)
+                  setContinuing(false)
+                  const errorType = json.error[0]
+                  if (errorType === 'image-conversion') {
+                    alert('The model could not detect all board corners. Please adjust the board or lighting.')
+                  } else if (errorType === 'move-illegal') {
+                    alert(json.error[1] + '\nPlease restore the live board to match MemoChess.')
+                  } else if (errorType === 'move-impossible') {
+                    alert('An impossible move was made.\n' + json.error[1] + '\nPlease restore the live board to match MemoChess.')
+                  }
                 }
               })
           })
@@ -155,13 +166,21 @@ function App() {
         fetch(`http://${SERVER_IP}/resume?` + webcamParams.toString())
           .then(response => response.json())
           .then(json => {
-            if (json.error === null || json.error === 'possible-move-made') {
+            if (json.error === null) {
               console.log(`Exact match: ${json.exact}`)
               setContinuing(true)
             } else {
-              console.log(`Error: ${json.error}`)
               setCapture(false)
               setContinuing(false)
+              if (json.error === 'possible-move-made') {
+                alert('The live board position does not match Memochess. Did you already make a move?')
+              } else if (json.error === 'image-conversion') {
+                alert('The model could not detect all board corners. Please adjust the board or lighting.')
+              } else if (json.error.startsWith('move-illegal')) {
+                alert('The live board position does not match Memochess. Please restore the live board before starting capture.')
+              } else if (json.error === 'move-impossible') {
+                alert('The live board position does not match Memochess. Please restore the live board before starting capture.')
+              }
             }
           })
           .catch(() => {})
@@ -200,6 +219,25 @@ function App() {
       <div className="left-[5%] top-[5%] fixed">
         <button onClick={() => setShowPopUp(!showPopUp)}>
           About Us
+        </button>
+      </div>
+      <div className="left-[5%] top-[12%] fixed">
+        <button onClick={() => {
+          fetch(`http://${SERVER_IP}/reset`)
+            .then(response => response.json())
+            .then(json => {
+              setShowPopUp(false)
+              setCapture(false)
+              setContinuing(false)
+              setFen(json.fen)
+              setMoveList([])
+              setBlobUrl(undefined)
+              setUsername('')
+              setPassword('')
+              setWebcamUrl('')
+            })
+        }}>
+          Logout
         </button>
       </div>
       <div className="right-[5%] top-[5%] fixed">

@@ -94,7 +94,7 @@ def find_valid_move(
     if len(new_pieces) == 1:
         dest = new_pieces.pop()
         if dest not in allowed_destinations:
-            raise MoveImpossibleException(f'No piece can move to {dest}')
+            raise MoveImpossibleException(f'No piece can move to {sqn(dest)}')
         possible_origins = {m.from_square for m in prev_state.legal_moves if m.to_square == dest}
         # Debatable to put this here. allows moves that bring the wrong piece over.
         if len(possible_origins) == 1:
