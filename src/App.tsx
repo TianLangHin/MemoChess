@@ -6,7 +6,7 @@ import { BoardView } from './components/BoardView.tsx'
 import { PopUp } from './components/PopUp.tsx'
 import { useWindowHeight } from './components/WindowHeight.ts'
 import { composePgn } from './utils/composePgn.ts'
-import { moveListDisplay, MoveTuple } from './utils/moveListDisplay.ts'
+import { moveListDisplay } from './utils/moveListDisplay.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
 
@@ -29,7 +29,7 @@ function App() {
   const [password, setPassword] = useState('')
 
   // State relating to scrollable move list.
-  const scrollableRef = useRef(null)
+  const scrollableRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const element = scrollableRef.current
@@ -54,28 +54,14 @@ function App() {
 
   const [gameOutcome, setGameOutcome] = useState('*')
 
-  const handleWhiteResign = () => {
-    if (gameOutcome !== '*')
-      return
-    setGameOutcome('0-1')
-    setCapture(false)
-    setContinuing(false)
-  }
-
-  const handleGameDraw = () => {
-    if (gameOutcome !== '*')
-      return
-    setGameOutcome('1/2-1/2')
-    setCapture(false)
-    setContinuing(false)
-  }
-
-  const handleBlackResign = () => {
-    if (gameOutcome !== '*')
-      return
-    setGameOutcome('1-0')
-    setCapture(false)
-    setContinuing(false)
+  const handleGameTermination = (outcome: string) => {
+    return () => {
+      if (gameOutcome !== '*')
+        return
+      setGameOutcome(outcome)
+      setCapture(false)
+      setContinuing(false)
+    }
   }
 
   const downloadPgn = () => {
@@ -195,8 +181,8 @@ function App() {
   }, [capture, continuing])
 
   const handleLogin = () => {
-    setUsername(prompt('Username:'))
-    setPassword(prompt('Password:'))
+    setUsername(prompt('Username:') ?? "")
+    setPassword(prompt('Password:') ?? "")
   }
 
   if (username !== 'memochess' || password !== '42028a2025') {
@@ -294,10 +280,10 @@ function App() {
         <div className="grid col-start-3 row-span-2">
           <div ref={scrollableRef} className="overflow-y-scroll">
             {
-              moveListDisplay(moveList).map(item => (
+              moveListDisplay(moveList).map(({ moveNumber, whiteMove, blackMove }) => (
                 <div className="h-1/8 text-2xl">
-                  <p key={item[0]}>
-                    {`${item[0]}. ${item[1]} ${item[2]}`}
+                  <p key={moveNumber}>
+                    {`${moveNumber}. ${whiteMove} ${blackMove}`}
                   </p>
                 </div>
               ))
@@ -306,13 +292,13 @@ function App() {
         </div>
       </div>
       <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-5">
-        <button className="p-4" onClick={handleWhiteResign}>
+        <button className="p-4" onClick={handleGameTermination('0-1')}>
           White Resigns
         </button>
-        <button className="p-4" onClick={handleGameDraw}>
+        <button className="p-4" onClick={handleGameTermination('1/2-1/2')}>
           Draw Game
         </button>
-        <button className="p-4" onClick={handleBlackResign}>
+        <button className="p-4" onClick={handleGameTermination('1-0')}>
           Black Resigns
         </button>
       </div>
@@ -322,7 +308,7 @@ function App() {
         </button>
         <button onClick={() => {
           const uciMove = prompt('Please enter the move played in UCI notation:')
-          const params = new URLSearchParams({ uci: uciMove })
+          const params = new URLSearchParams({ uci: uciMove ?? "" })
           fetch(`http://${SERVER_IP}/override?` + params.toString())
             .then(response => response.json())
             .then(json => {
