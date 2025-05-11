@@ -7,8 +7,14 @@ export type BoardViewProps = {
 }
 
 export type MoveListProps = {
-  scrollRef: React.Ref<HTMLDivElement> | undefined,
   moveList: string[]
+}
+
+export type PlayerNamesProps = {
+  whiteGetter: string,
+  whiteSetter: (event: React.ChangeEvent<HTMLInputElement>) => void,
+  blackGetter: string,
+  blackSetter: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export type PopUpProps = {

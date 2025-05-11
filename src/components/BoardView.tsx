@@ -1,6 +1,6 @@
 import { BoardViewProps } from '../types.ts'
 
-export function BoardView(props: BoardViewProps) {
+function BoardView(props: BoardViewProps) {
 
   const { url, webcam, updateWebcam, capture, toggleCapture } = props
 
@@ -18,3 +18,5 @@ export function BoardView(props: BoardViewProps) {
     </>
   )
 }
+
+export default BoardView

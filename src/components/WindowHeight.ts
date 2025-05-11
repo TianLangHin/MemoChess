@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export function useWindowHeight() {
+function useWindowHeight() {
   const [windowHeight, setWindowHeight] = useState(window.innerHeight)
 
   useEffect(() => {
@@ -13,3 +13,5 @@ export function useWindowHeight() {
 
   return windowHeight
 }
+
+export default useWindowHeight

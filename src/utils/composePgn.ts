@@ -9,7 +9,7 @@ function pgnMoveList(moves: string[]): string {
   return evenPlies + (moveAtEnd ? ` ${bothMoveCount + 1}. ${moves[moves.length-1]}` : '')
 }
 
-export function composePgn(
+function composePgn(
   moveList: string[],
   whitePlayer: string,
   blackPlayer: string,
@@ -23,3 +23,5 @@ export function composePgn(
 
 ${pgnMoveList(moveList)} ${result === '*' ? '' : result}`
 }
+
+export default composePgn

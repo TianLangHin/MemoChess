@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { MoveListProps } from '../types.ts'
 
 type MoveStruct = {
@@ -7,6 +8,7 @@ type MoveStruct = {
 }
 
 function moveListDisplay(moves: string[]): MoveStruct[] {
+
   const bothMoveCount = moves.length >> 1
 
   const evenPlies = Array.from(Array(bothMoveCount).keys())
@@ -29,9 +31,17 @@ function moveListDisplay(moves: string[]): MoveStruct[] {
   return [...evenPlies, ...lastMove]
 }
 
-export function MoveList(props: MoveListProps) {
+function MoveList(props: MoveListProps) {
 
-  const { scrollRef, moveList } = props
+  const { moveList } = props
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const element = scrollRef.current
+    if (element) {
+      element.scrollTop = element.scrollHeight
+    }
+  }, [moveList])
 
   return (
     <>
@@ -51,3 +61,5 @@ export function MoveList(props: MoveListProps) {
     </>
   )
 }
+
+export default MoveList

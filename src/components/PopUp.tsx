@@ -1,17 +1,24 @@
 import { PopUpProps } from '../types.ts'
 import '../App.css'
 
-export function PopUp(props: PopUpProps) {
+function PopUp(props: PopUpProps) {
+  const { showPopUp, setShowPopUp, children } = props
   return (
-    props.showPopUp ? (
-      <div className="pop-up">
-        <div>
-          { props.children }
-          <button onClick={() => props.setShowPopUp(false)}>
-            Close
-          </button>
+    <>
+    {
+      showPopUp && (
+        <div className="pop-up">
+          <div>
+            { children }
+            <button onClick={() => setShowPopUp(false)}>
+              Close
+            </button>
+          </div>
         </div>
-      </div>
-    ) : (<></>)
+      )
+    }
+    </>
   )
 }
+
+export default PopUp

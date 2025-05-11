@@ -1,4 +1,4 @@
-export function TeamInfo() {
+function TeamInfo() {
   return (
     <>
       <h2 className="text-black text-4xl p-4">Our Team</h2>
@@ -8,3 +8,5 @@ export function TeamInfo() {
     </>
   )
 }
+
+export default TeamInfo
