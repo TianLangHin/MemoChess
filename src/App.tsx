@@ -180,7 +180,6 @@ function App() {
               resumingErrorMsg(json.error)
             }
           })
-          .catch(() => {})
       }
 
     }, POLLING_INTERVAL)
