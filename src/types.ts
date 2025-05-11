@@ -1,5 +1,14 @@
 export type BoardViewProps = {
-  url: string | undefined
+  url: string | undefined,
+  webcam: string,
+  updateWebcam: (event: React.ChangeEvent<HTMLInputElement>) => void,
+  capture: boolean,
+  toggleCapture: () => void
+}
+
+export type MoveListProps = {
+  scrollRef: React.Ref<HTMLDivElement> | undefined,
+  moveList: string[]
 }
 
 export type PopUpProps = {

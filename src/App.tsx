@@ -3,10 +3,11 @@ import { Chessboard } from 'react-chessboard'
 import './App.css'
 
 import { BoardView } from './components/BoardView.tsx'
+import { MoveList } from './components/MoveList.tsx'
 import { PopUp } from './components/PopUp.tsx'
+import { TeamInfo } from './components/TeamInfo.tsx'
 import { useWindowHeight } from './components/WindowHeight.ts'
 import { composePgn } from './utils/composePgn.ts'
-import { moveListDisplay } from './utils/moveListDisplay.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
 
@@ -141,6 +142,8 @@ function App() {
                     alert(json.error[1] + '\nPlease restore the live board to match MemoChess.')
                   } else if (errorType === 'move-impossible') {
                     alert('An impossible move was made.\n' + json.error[1] + '\nPlease restore the live board to match MemoChess.')
+                  } else {
+                    alert(`Unknown error occurred: ${errorType}`)
                   }
                 }
               })
@@ -166,6 +169,10 @@ function App() {
                 alert('The live board position does not match Memochess. Please restore the live board before starting capture.')
               } else if (json.error === 'move-impossible') {
                 alert('The live board position does not match Memochess. Please restore the live board before starting capture.')
+              } else if (json.error === 'no-capture') {
+                alert('No live board capture could be found. Is the IP Camera server started?')
+              } else {
+                alert(`Unknown error occurred: ${json.error}`)
               }
             }
           })
@@ -180,18 +187,16 @@ function App() {
 
   }, [capture, continuing])
 
-  const handleLogin = () => {
-    setUsername(prompt('Username:') ?? "")
-    setPassword(prompt('Password:') ?? "")
-  }
-
   if (username !== 'memochess' || password !== '42028a2025') {
     return (
       <>
         <h1 className="p-15">
           Please login to use MemoChess.
         </h1>
-        <button onClick={handleLogin} className="p-10">
+        <button onClick={() => {
+          setUsername(prompt('Username:') ?? "")
+          setPassword(prompt('Password:') ?? "")
+        }} className="p-10">
           <h2 className="text-lg">
             Login
           </h2>
@@ -200,55 +205,42 @@ function App() {
     )
   }
 
+  const resetAll = () => {
+    fetch(`http://${SERVER_IP}/reset`)
+      .then(response => response.json())
+      .then(json => {
+        setShowPopUp(false)
+        setCapture(false)
+        setContinuing(false)
+        setFen(json.fen)
+        setMoveList([])
+        setBlobUrl(undefined)
+        setUsername('')
+        setPassword('')
+        setWebcamUrl('')
+      })
+  }
+
   return (
     <>
       <div className="left-[5%] top-[5%] fixed">
-        <button onClick={() => setShowPopUp(!showPopUp)}>
-          About Us
-        </button>
+        <button onClick={() => setShowPopUp(!showPopUp)}>About Us</button>
       </div>
       <div className="left-[5%] top-[12%] fixed">
-        <button onClick={() => {
-          fetch(`http://${SERVER_IP}/reset`)
-            .then(response => response.json())
-            .then(json => {
-              setShowPopUp(false)
-              setCapture(false)
-              setContinuing(false)
-              setFen(json.fen)
-              setMoveList([])
-              setBlobUrl(undefined)
-              setUsername('')
-              setPassword('')
-              setWebcamUrl('')
-            })
-        }}>
-          Logout
-        </button>
+        <button onClick={resetAll}>Logout</button>
       </div>
       <div className="right-[5%] top-[5%] fixed">
-        <button onClick={downloadPgn}>
-          Download PGN
-        </button>
+        <button onClick={downloadPgn}>Download PGN</button>
       </div>
       <div>
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
-          <h2 className="text-black text-4xl p-4">Our Team</h2>
-          <ol>
-            <p className="text-black">Tian Lang Hin (24766127)</p>
-            <p className="text-black">Duong Anh Tran (24775456)</p>
-            <p className="text-black">Isabella Watt (24843322)</p>
-          </ol>
+          <TeamInfo />
         </PopUp>
       </div>
       <h1 className="p-[20px]">
         MemoChess
       </h1>
-      <p>
-        {
-          (gameOutcome !== '*') && `Result: ${gameOutcome}`
-        }
-      </p>
+      <p>{ (gameOutcome !== '*') && `Result: ${gameOutcome}` }</p>
       <div className="container grid grid-cols-4 grid-rows-1 gap-2 p-2">
         <h2 className="border-2">White Player</h2>
         <input type="text" className="border-1"
@@ -261,15 +253,10 @@ function App() {
       </div>
       <div className="container grid grid-cols-3 grid-rows-2 gap-4 main-content">
         <div className="grid grid-col-1 row-span-2">
-          <BoardView url={blobUrl} />
-          <div className="grid grid-cols-2 px-2 gap-2">
-            <input type="text" className="border-2"
-              placeholder="IP Webcam Address"
-              value={webcamUrl} onChange={updateWebcamUrl} />
-            <button className="px-4" onClick={toggleCaptureButton}>
-              { capture ? "Stop Capture" : "Start Capture" }
-            </button>
-          </div>
+          <BoardView
+            url={blobUrl}
+            webcam={webcamUrl} updateWebcam={updateWebcamUrl}
+            capture={capture} toggleCapture={toggleCaptureButton} />
         </div>
         <div className="grid col-start-2 row-span-2 flex justify-center items-center">
           <Chessboard
@@ -278,17 +265,7 @@ function App() {
             boardWidth={0.4 * windowHeight} />
         </div>
         <div className="grid col-start-3 row-span-2">
-          <div ref={scrollableRef} className="overflow-y-scroll">
-            {
-              moveListDisplay(moveList).map(({ moveNumber, whiteMove, blackMove }) => (
-                <div className="h-1/8 text-2xl">
-                  <p key={moveNumber}>
-                    {`${moveNumber}. ${whiteMove} ${blackMove}`}
-                  </p>
-                </div>
-              ))
-            }
-          </div>
+          <MoveList scrollRef={scrollableRef} moveList={moveList} />
         </div>
       </div>
       <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-5">
