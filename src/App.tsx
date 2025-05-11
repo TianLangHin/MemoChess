@@ -12,6 +12,7 @@ import composePgn from './utils/composePgn.ts'
 import { continuingErrorMsg, resumingErrorMsg } from './utils/errorMessages.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
+const POLLING_INTERVAL = 2000
 
 function App() {
   // State relating to the current game state.
@@ -31,24 +32,13 @@ function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  // State relating to scrollable move list.
-
+  // State relating to chessboard height.
   const windowHeight = useWindowHeight()
 
-  // State relating to the game data for PGN download.
+  // State and functionality relating to the game data for PGN download.
   const [whitePlayer, setWhitePlayer] = useState('')
   const [blackPlayer, setBlackPlayer] = useState('')
   const [gameOutcome, setGameOutcome] = useState('*')
-
-  const handleGameTermination = (outcome: string) => {
-    return () => {
-      if (gameOutcome !== '*')
-        return
-      setGameOutcome(outcome)
-      setCapture(false)
-      setContinuing(false)
-    }
-  }
 
   const downloadPgn = () => {
     const pgnContents = composePgn(
@@ -69,6 +59,23 @@ function App() {
     URL.revokeObjectURL(url)
   }
 
+  // Closure to deactivate all capturing of images.
+  const deactivateCamera = () => {
+    setCapture(false)
+    setContinuing(false)
+  }
+
+  // Closure to terminate the game with a particular result.
+  const handleGameTermination = (outcome: string) => {
+    return () => {
+      if (gameOutcome !== '*')
+        return
+      setGameOutcome(outcome)
+      deactivateCamera()
+    }
+  }
+
+  // Closure to call the API to remove one move from the move stack.
   const undoLastMoveButton = () => {
     fetch(`http://${SERVER_IP}/undolastmove`)
       .then(response => response.json())
@@ -78,13 +85,13 @@ function App() {
       })
   }
 
+  // Closure to reset both the server and the UI state (for logout).
   const resetAll = () => {
     fetch(`http://${SERVER_IP}/reset`)
       .then(response => response.json())
       .then(json => {
         setShowPopUp(false)
-        setCapture(false)
-        setContinuing(false)
+        deactivateCamera()
         setFen(json.fen)
         setMoveList([])
         setBlobUrl(undefined)
@@ -94,9 +101,29 @@ function App() {
       })
   }
 
+  // Closure to prompt the user for a move to override incorrect detections.
+  const overrideMove = () => {
+    const uciMove = prompt('Please enter the move played in UCI notation:')
+    const params = new URLSearchParams({ uci: uciMove ?? "" })
+
+    fetch(`http://${SERVER_IP}/override?` + params.toString())
+      .then(response => response.json())
+      .then(json => {
+        if (json.valid) {
+          setFen(json.fen)
+          setMoveList(list => [...list, json.san])
+        } else {
+          alert('Illegal move entered.')
+        }
+      })
+    deactivateCamera()
+  }
+
   // Every 2 seconds, poll the server for both the video feed and updated board.
   useEffect(() => {
+
     const interval = setInterval(() => {
+
       // Do not do any processing if we are not capturing feed.
       if (!capture)
         return
@@ -105,14 +132,21 @@ function App() {
       const webcamParams = new URLSearchParams({ webcam: webcamUrl })
 
       if (continuing) {
+
         // Clear out previous blobs to avoid memory leaks.
         if (blobUrl !== undefined)
           URL.revokeObjectURL(blobUrl)
 
+        // If "continuing" a game, we first retrieve the image via `/continue`
+        // and then fetch the move being made via `/lastmove`.
+        // To ensure these fetches are done sequentially, they are nested.
         fetch(`http://${SERVER_IP}/continue?` + webcamParams.toString())
           .then(response => response.blob())
           .then(blob => {
+            // First, we update the camera feed image.
             setBlobUrl(URL.createObjectURL(blob))
+
+            // This server call is made immediately after `/continue` concludes.
             fetch(`http://${SERVER_IP}/lastmove`)
               .then(response => response.json())
               .then(json => {
@@ -123,13 +157,11 @@ function App() {
                     setMoveList(list => [...list, json.move])
                   if (json.status !== '*') {
                     setGameOutcome(json.status)
-                    setCapture(false)
-                    setContinuing(false)
+                    deactivateCamera()
                     alert(`Game has concluded. Result: ${json.status}.`)
                   }
                 } else {
-                  setCapture(false)
-                  setContinuing(false)
+                  deactivateCamera()
                   continuingErrorMsg(json.error)
                 }
               })
@@ -142,18 +174,16 @@ function App() {
           .then(response => response.json())
           .then(json => {
             if (json.error === null) {
-              console.log(`Exact match: ${json.exact}`)
               setContinuing(true)
             } else {
-              setCapture(false)
-              setContinuing(false)
+              deactivateCamera()
               resumingErrorMsg(json.error)
             }
           })
           .catch(() => {})
       }
 
-    }, 2000)
+    }, POLLING_INTERVAL)
 
     return () => {
       clearInterval(interval)
@@ -161,6 +191,7 @@ function App() {
 
   }, [capture, continuing])
 
+  // Login prompt (with dummy login details)
   if (username !== 'memochess' || password !== '42028a2025') {
     return (
       <>
@@ -208,8 +239,7 @@ function App() {
             (event: React.ChangeEvent<HTMLInputElement>) => {
               setBlackPlayer(event.currentTarget.value)
             }
-          }
-        />
+          } />
       </div>
       <div className="container grid grid-cols-3 grid-rows-2 gap-4 main-content">
         <div className="grid grid-col-1 row-span-2">
@@ -254,7 +284,7 @@ function App() {
         <button onClick={undoLastMoveButton} className="m-1">
           Undo Move
         </button>
-        <button onClick={resetAll} className="m-1">
+        <button onClick={overrideMove} className="m-1">
           Override Move
         </button>
       </div>
