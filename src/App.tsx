@@ -48,13 +48,17 @@ function App() {
       'MemoChess',
       gameOutcome
     )
+    // After creating the PGN text file contents, it is put in a blob for download.
     const blob = new Blob([pgnContents], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
+    // A link to this file is made.
     const link = document.createElement('a')
     link.href = url
     link.download = 'game.pgn'
     document.body.appendChild(link)
+    // A click is then automatically triggered to initiate download.
     link.click()
+    // After download concludes, remove the blob and revoke the URL to prevent memory leaks.
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
@@ -75,7 +79,7 @@ function App() {
     }
   }
 
-  // Closure to call the API to remove one move from the move stack.
+  // Closure to call the server to remove one move from the move stack.
   const undoLastMoveButton = () => {
     fetch(`http://${SERVER_IP}/undolastmove`)
       .then(response => response.json())
@@ -110,16 +114,20 @@ function App() {
       .then(response => response.json())
       .then(json => {
         if (json.valid) {
+          // Here, the server will return the updated FEN and move in SAN.
           setFen(json.fen)
           setMoveList(list => [...list, json.san])
         } else {
           alert('Illegal move entered.')
         }
       })
+
+    // We finally deactivate the camera capture here to prevent
+    // continuous server alerts and errors.
     deactivateCamera()
   }
 
-  // Every 2 seconds, poll the server for both the video feed and updated board.
+  // Every `POLLING_INTERVAL` milliseconds, poll the server for the video feed then updated board.
   useEffect(() => {
 
     const interval = setInterval(() => {
@@ -151,10 +159,13 @@ function App() {
               .then(response => response.json())
               .then(json => {
                 if (json.error === null) {
+
+                  // Update the board state, then the move if there is a change.
                   setFen(json.fen)
-                  // Update the move if it is not a null move (same position).
                   if (json.move !== null)
                     setMoveList(list => [...list, json.move])
+
+                  // Update the game outcome (possibly terminate/deactivate if concluded)
                   if (json.status !== '*') {
                     setGameOutcome(json.status)
                     deactivateCamera()
@@ -162,7 +173,7 @@ function App() {
                   }
                 } else {
                   deactivateCamera()
-                  continuingErrorMsg(json.error)
+                  alert(continuingErrorMsg(json.error))
                 }
               })
           })
@@ -176,8 +187,11 @@ function App() {
             if (json.error === null) {
               setContinuing(true)
             } else {
+              // If there was an error resuming the board state
+              // (live board does not match, or server error)
+              // then stop the camera feed and alert user with the error.
               deactivateCamera()
-              resumingErrorMsg(json.error)
+              alert(resumingErrorMsg(json.error))
             }
           })
       }
@@ -209,6 +223,7 @@ function App() {
 
   return (
     <>
+      {/* Buttons at the top of the UI */}
       <div className="left-[5%] top-[5%] fixed">
         <button onClick={() => setShowPopUp(!showPopUp)}>About Us</button>
       </div>
@@ -218,13 +233,16 @@ function App() {
       <div className="right-[5%] top-[5%] fixed">
         <button onClick={downloadPgn}>Download PGN</button>
       </div>
+      {/* Pop up tab to show team information if requested */}
       <div>
         <PopUp showPopUp={showPopUp} setShowPopUp={setShowPopUp}>
           <TeamInfo />
         </PopUp>
       </div>
+      {/* Main app title and the result (if the game has concluded) */}
       <h1 className="p-[20px]">MemoChess</h1>
       <p>{(gameOutcome !== '*') && `Result: ${gameOutcome}`}</p>
+      {/* Player detail section */}
       <div className="container grid grid-cols-4 grid-rows-1 gap-2 p-2">
         <PlayerNames
           whiteGetter={whitePlayer}
@@ -240,7 +258,9 @@ function App() {
             }
           } />
       </div>
+      {/* Main content section */}
       <div className="container grid grid-cols-3 grid-rows-2 gap-4 main-content">
+        {/* Column 1/3: Camera live feed and webcam parameters */}
         <div className="grid grid-col-1 row-span-2">
           <BoardView
             url={blobUrl}
@@ -258,16 +278,19 @@ function App() {
               }
             } />
         </div>
+        {/* Column 2/3: Chessboard display */}
         <div className="grid col-start-2 row-span-2 flex justify-center items-center">
           <Chessboard
             arePiecesDraggable={false}
             position={fen}
             boardWidth={0.4 * windowHeight} />
         </div>
+        {/* Column 3/3: Move list */}
         <div className="grid col-start-3 row-span-2">
           <MoveList moveList={moveList} />
         </div>
       </div>
+      {/* Buttons for controlling game outcome: resignation or drawing */}
       <div className="container grid grid-cols-3 grid-rows-1 gap-2 p-5">
         <button className="p-4" onClick={handleGameTermination('0-1')}>
           White Resigns
@@ -279,6 +302,7 @@ function App() {
           Black Resigns
         </button>
       </div>
+      {/* Buttons for manual move overriding (in case of misdetections) */}
       <div>
         <button onClick={undoLastMoveButton} className="m-1">
           Undo Move
