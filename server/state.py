@@ -17,7 +17,7 @@ def full_occupancy(colour_map: List[Optional[chess.Color]]) -> Set[int]:
 
 def sqn(sq: Union[int, Set[int]]) -> str:
     if isinstance(sq, set):
-        return {sqn(s) for s in sq}
+        return str({sqn(s) for s in sq})
     else:
         return 'abcdefgh'[sq % 8] + '12345678'[sq // 8]
 
@@ -78,11 +78,11 @@ def find_valid_move(
     pred = full_occupancy(new_state_colour)
 
     if pred <= true:
+        possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
         # Only consider captures here.
         for move in prev_state.legal_moves:
             if prev_state.piece_at(move.to_square) is not None:
                 prev_state.push(move)
-                possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
                 prev_state.pop()
                 if pred <= possible_occ:
                     return move, False

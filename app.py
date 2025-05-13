@@ -1,10 +1,15 @@
-from flask import Flask, jsonify, request, send_file
+import mimetypes
+mimetypes.add_type('application/javascript', '.js')
+mimetypes.add_type('text/css', '.css')
+
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 
 import chess
 import cv2
 import io
 import numpy as np
+import os
 from PIL import Image
 import random
 import requests
@@ -19,7 +24,7 @@ MODEL = YOLO('models/trained_yolo11n-v0-1-1.pt')
 
 random.seed(19937)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=os.path.join('dist'), static_url_path='/')
 CORS(app)
 
 GLOBAL_BOARD_STATE = chess.Board()
@@ -50,7 +55,7 @@ def get_image_capture_and_blob(webcam_ip: str):
 
 @app.route('/')
 def root():
-    return jsonify({'memo-chess': True})
+    return send_from_directory(app.static_folder, 'index.html')
 
 # This endpoint returns just the frame captured by the IP webcam.
 @app.route('/video')
