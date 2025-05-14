@@ -94,14 +94,23 @@ function App() {
     fetch(`http://${SERVER_IP}/reset`)
       .then(response => response.json())
       .then(json => {
+        // Ensure pop up does not appear.
         setShowPopUp(false)
+        // Deactivate camera.
         deactivateCamera()
+        // Reset FEN and move list.
         setFen(json.fen)
         setMoveList([])
-        setBlobUrl(undefined)
+        // Reset login details.
         setUsername('')
         setPassword('')
+        // Reset webcam.
         setWebcamUrl('')
+        setBlobUrl(undefined)
+        // Reset game progress.
+        setWhitePlayer('')
+        setBlackPlayer('')
+        setGameOutcome('*')
       })
   }
 
