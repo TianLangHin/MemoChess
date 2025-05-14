@@ -12,7 +12,7 @@ import composePgn from './utils/composePgn.ts'
 import { continuingErrorMsg, resumingErrorMsg } from './utils/errorMessages.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
-const POLLING_INTERVAL = 2000
+const POLLING_INTERVAL = 5000
 
 function App() {
   // State relating to the current game state.
@@ -182,25 +182,31 @@ function App() {
                   }
                 } else {
                   deactivateCamera()
-                  alert(continuingErrorMsg(json.error))
+                  console.log(continuingErrorMsg(json.error))
                 }
               })
           })
 
       } else {
 
+        const falsePositiveMoveDetections = (err: string) => {
+          return err.startsWith('move-illegal')
+            || err === 'move-impossible'
+            || err === 'possible-move-made'
+        }
+
         // If not "continuing" a game, we are instead "resuming" from a position.
         fetch(`http://${SERVER_IP}/resume?` + webcamParams.toString())
           .then(response => response.json())
           .then(json => {
-            if (json.error === null) {
+            if (json.error === null || falsePositiveMoveDetections(json.error)) {
               setContinuing(true)
             } else {
               // If there was an error resuming the board state
               // (live board does not match, or server error)
-              // then stop the camera feed and alert user with the error.
+              // then stop the camera feed and log the error.
               deactivateCamera()
-              alert(resumingErrorMsg(json.error))
+              console.log(resumingErrorMsg(json.error))
             }
           })
       }

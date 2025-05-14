@@ -78,11 +78,11 @@ def find_valid_move(
     pred = full_occupancy(new_state_colour)
 
     if pred <= true:
-        possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
         # Only consider captures here.
         for move in prev_state.legal_moves:
             if prev_state.piece_at(move.to_square) is not None:
                 prev_state.push(move)
+                possible_occ = full_occupancy(colour_list(piece_list(prev_state)))
                 prev_state.pop()
                 if pred <= possible_occ:
                     return move, False
