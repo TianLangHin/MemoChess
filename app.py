@@ -20,7 +20,7 @@ from server.api import continuing_game, resuming_game
 from server.types import *
 
 # Most recently trained model.
-MODEL = YOLO('models/trained_yolo11n-v0-1-1.pt')
+MODEL = YOLO('models/trained_yolo11m-v0-1-0.pt')
 
 random.seed(19937)
 
@@ -95,13 +95,13 @@ def endpoint_continue():
         return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
     except ImageConversionException as err:
         CURRENT_MOVE_STATE = MoveState(
-            move=None, exact=True, error=['image-conversion', *err.args])
+            move=None, exact=True, error=['image-conversion', ' '.join(err.args)])
     except MoveIllegalException as err:
         CURRENT_MOVE_STATE = MoveState(
-            move=None, exact=True, error=['move-illegal', *err.args])
+            move=None, exact=True, error=['move-illegal', ' '.join(err.args)])
     except MoveImpossibleException as err:
         CURRENT_MOVE_STATE = MoveState(
-            move=None, exact=True, error=['move-impossible', *err.args])
+            move=None, exact=True, error=['move-impossible', ' '.join(err.args)])
     return send_file(io.BytesIO(blob.tobytes()), mimetype='image/png')
 
 @app.route('/lastmove')

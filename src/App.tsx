@@ -12,7 +12,7 @@ import composePgn from './utils/composePgn.ts'
 import { continuingErrorMsg, resumingErrorMsg } from './utils/errorMessages.ts'
 
 const SERVER_IP = '127.0.0.1:5000'
-const POLLING_INTERVAL = 5000
+const POLLING_INTERVAL = 2000
 
 function App() {
   // State relating to the current game state.
@@ -182,7 +182,7 @@ function App() {
                   }
                 } else {
                   deactivateCamera()
-                  console.log(continuingErrorMsg(json.error))
+                  alert(continuingErrorMsg(json.error))
                 }
               })
           })
@@ -206,7 +206,7 @@ function App() {
               // (live board does not match, or server error)
               // then stop the camera feed and log the error.
               deactivateCamera()
-              console.log(resumingErrorMsg(json.error))
+              alert(resumingErrorMsg(json.error))
             }
           })
       }
