@@ -126,8 +126,15 @@ function App() {
           // Here, the server will return the updated FEN and move in SAN.
           setFen(json.fen)
           setMoveList(list => [...list, json.san])
+
+          // Update the game outcome (possibly terminate/deactivate if concluded)
+          if (json.status !== '*') {
+            setGameOutcome(json.status)
+            deactivateCamera()
+            alert(`Game has concluded. Result: ${json.status}.`)
+          }
         } else {
-          alert('Illegal move entered.')
+          alert(`Illegal move entered: ${uciMove}.`)
         }
       })
 

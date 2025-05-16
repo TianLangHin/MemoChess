@@ -148,14 +148,18 @@ def endpoint_undolastmove():
 @app.route('/override')
 def endpoint_override():
     uci_move = request.args.get('uci').lower()
-    move = chess.Move.from_uci(uci_move)
-    if move in GLOBAL_BOARD_STATE.legal_moves:
-        san = GLOBAL_BOARD_STATE.san(move)
-        GLOBAL_BOARD_STATE.push(move)
-        fen = GLOBAL_BOARD_STATE.fen()
-        CURRENT_MOVE_STATE = MoveState(move=san, exact=True, error=None)
-        return jsonify({'valid': True, 'san': san, 'fen': fen})
-    else:
+    try:
+        move = chess.Move.from_uci(uci_move)
+        if move in GLOBAL_BOARD_STATE.legal_moves:
+            san = GLOBAL_BOARD_STATE.san(move)
+            GLOBAL_BOARD_STATE.push(move)
+            fen = GLOBAL_BOARD_STATE.fen()
+            status = GLOBAL_BOARD_STATE.result()
+            CURRENT_MOVE_STATE = MoveState(move=san, exact=True, error=None)
+            return jsonify({'valid': True, 'san': san, 'fen': fen, 'status': status})
+        else:
+            return jsonify({'valid': False})
+    except AssertionError:
         return jsonify({'valid': False})
 
 @app.route('/reset')
