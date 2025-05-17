@@ -9,7 +9,7 @@ from server.types import ImageConversionException
 
 Point = namedtuple('Point', ['x', 'y'])
 BoundingBox = namedtuple('BoundingBox', ['x', 'y', 'w', 'h'])
-BoxPrediction = namedtuple('BoxResult', ['name', 'conf', 'bounding_box'])
+BoxPrediction = namedtuple('BoxPrediction', ['name', 'conf', 'bounding_box'])
 
 LABEL_TO_PIECE_MAP = {
     'white pawn':   chess.Piece(chess.PAWN,   chess.WHITE),
@@ -66,6 +66,11 @@ def yolo_image_to_board(
 
     # Need to calculate the bounds here based on the corners.
     corner1, corner2 = maximum_bounding_square(corners)
+    entire_grid_bb = BoundingBox(
+        x=(corner1.x + corner2.x)/2,
+        y=(corner1.y + corner2.y)/2,
+        w=corner2.x - corner1.x,
+        h=corner2.y - corner1.y)
 
     # Then, we map a square in the image region to a particular square in the board.
     # We assume we are viewing the board such that H8 is the top-left
@@ -84,6 +89,9 @@ def yolo_image_to_board(
     for box_prediction in box_predictions:
         # We ignore all predictions of corners.
         if box_prediction.name == 'corner':
+            continue
+
+        if intersection_area(entire_grid_bb, box_prediction.bounding_box) == 0:
             continue
 
         # We then find the piece, its bounding box and its confidence.
