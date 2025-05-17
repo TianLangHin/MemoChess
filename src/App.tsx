@@ -187,7 +187,8 @@ function App() {
                     deactivateCamera()
                     alert(`Game has concluded. Result: ${json.status}.`)
                   }
-                } else {
+                } else if (json.error[0] !== 'image-conversion') {
+                  // We skip over any frames where the person obstructs board corners.
                   deactivateCamera()
                   alert(continuingErrorMsg(json.error))
                 }
@@ -208,7 +209,8 @@ function App() {
           .then(json => {
             if (json.error === null || falsePositiveMoveDetections(json.error)) {
               setContinuing(true)
-            } else {
+            } else if (json.error !== 'image-conversion') {
+              // We skip over any frames where the person obstructs board corners.
               // If there was an error resuming the board state
               // (live board does not match, or server error)
               // then stop the camera feed and log the error.
