@@ -4,6 +4,7 @@ from flask_cors import CORS
 import cv2
 import io
 import os
+import sys
 
 app = Flask(__name__)
 CORS(app)
@@ -21,7 +22,9 @@ MAX_IMAGES = len(os.listdir(IMAGE_PATH))
 # the server counts how many times it gets polled,
 # and moves to the next position once `MAX_POLLS` is reached.
 GLOBAL_STATE = (1, 0)
-MAX_POLLS = 25
+
+# `MAX_POLLS` is to be customised upon startup.
+MAX_POLLS = int(sys.argv[1])
 
 @app.route('/')
 def root():
