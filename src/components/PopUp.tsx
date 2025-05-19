@@ -6,9 +6,7 @@ function PopUp(props: PopUpProps) {
   return (
     showPopUp && (
       <div className="pop-up rounded-md bg-slate-300 p-4">
-        <div>
-          { children }
-        </div>
+        <div className="overflow-y-scroll mb-3">{children}</div>
         <button onClick={() => setShowPopUp(false)} className="mb-0">
           Close
         </button>
