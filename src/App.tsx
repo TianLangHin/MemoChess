@@ -117,7 +117,12 @@ function App() {
   // Closure to prompt the user for a move to override incorrect detections.
   const overrideMove = () => {
     const uciMove = prompt('Please enter the move played in UCI notation:')
-    const params = new URLSearchParams({ uci: uciMove ?? '' })
+
+    // Do not call the server if the move override is cancelled or nothing is entered.
+    if (uciMove === null || uciMove === '')
+      return
+
+    const params = new URLSearchParams({ uci: uciMove })
 
     fetch(`http://${SERVER_IP}/override?` + params.toString())
       .then(response => response.json())

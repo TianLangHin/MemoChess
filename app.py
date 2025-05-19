@@ -159,7 +159,7 @@ def endpoint_override():
             return jsonify({'valid': True, 'san': san, 'fen': fen, 'status': status})
         else:
             return jsonify({'valid': False})
-    except AssertionError:
+    except (AssertionError, chess.InvalidMoveError):
         return jsonify({'valid': False})
 
 @app.route('/reset')
