@@ -5,13 +5,13 @@ function PopUp(props: PopUpProps) {
   const { showPopUp, setShowPopUp, children } = props
   return (
     showPopUp && (
-      <div className="pop-up">
+      <div className="pop-up rounded-md bg-slate-300 p-4">
         <div>
           { children }
-          <button onClick={() => setShowPopUp(false)}>
-            Close
-          </button>
         </div>
+        <button onClick={() => setShowPopUp(false)} className="mb-0">
+          Close
+        </button>
       </div>
     )
   )

@@ -117,7 +117,7 @@ function App() {
   // Closure to prompt the user for a move to override incorrect detections.
   const overrideMove = () => {
     const uciMove = prompt('Please enter the move played in UCI notation:')
-    const params = new URLSearchParams({ uci: uciMove ?? "" })
+    const params = new URLSearchParams({ uci: uciMove ?? '' })
 
     fetch(`http://${SERVER_IP}/override?` + params.toString())
       .then(response => response.json())
@@ -235,8 +235,8 @@ function App() {
         <h1 className="p-15">Please login to use MemoChess.</h1>
         <button onClick={
           () => {
-            setUsername(prompt('Username:') ?? "")
-            setPassword(prompt('Password:') ?? "")
+            setUsername(prompt('Username:') ?? '')
+            setPassword(prompt('Password:') ?? '')
           }
         } className="p-10">
           <h2 className="text-lg">Login</h2>
