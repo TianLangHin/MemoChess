@@ -39,7 +39,7 @@ For Windows, call the following.
 python -m venv .venv
 .venv\Scripts\activate.bat
 pip install -r requirements.txt
-npm run build
+npm install
 ```
 
 For Linux/MacOS, call the following.
@@ -47,7 +47,7 @@ For Linux/MacOS, call the following.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-npm run build
+npm install
 ```
 
 ### Running the Application

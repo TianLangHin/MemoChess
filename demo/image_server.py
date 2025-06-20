@@ -9,22 +9,24 @@ import sys
 app = Flask(__name__)
 CORS(app)
 
+# `FOLDER_NAME` should be either 'fide2023-game18' or 'fide2024-game14'
+FOLDER_NAME = sys.argv[1]
+# `MAX_POLLS` is to be customised upon startup.
+MAX_POLLS = int(sys.argv[2])
+
 # This is the neighbouring directory of sample images.
 # The structure is to be as follows:
-# fide2024-game14/
+# folder/
 # -- 0001.png
 # -- 0002.png
 # ...etc.
-IMAGE_PATH = os.path.join(os.getcwd(), 'fide2024-game14')
+IMAGE_PATH = os.path.join(os.getcwd(), FOLDER_NAME)
 MAX_IMAGES = len(os.listdir(IMAGE_PATH))
 
 # To simulate a person moving a chess piece every so often,
 # the server counts how many times it gets polled,
 # and moves to the next position once `MAX_POLLS` is reached.
 GLOBAL_STATE = (1, 0)
-
-# `MAX_POLLS` is to be customised upon startup.
-MAX_POLLS = int(sys.argv[1])
 
 @app.route('/')
 def root():
@@ -43,7 +45,7 @@ def video():
         GLOBAL_STATE = (image_number, query_number)
 
     return send_file(
-        os.path.join(os.getcwd(), 'fide2024-game14', f'{image_number:0>4}.png'),
+        os.path.join(os.getcwd(), FOLDER_NAME, f'{image_number:0>4}.png'),
         mimetype='image/png')
 
 if __name__ == '__main__':
