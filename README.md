@@ -1,6 +1,9 @@
 # MemoChess
 A computer vision app that automatically notates classical chess games live, intended both for tournament and casual use.
 
+You can find our demonstration video [here](https://www.youtube.com/watch?v=KFnfgNVz7bw)
+as part of the AI Showcase @ UTS TechFest 2025!
+
 ## Framework
 This web application is presented through a React web interface,
 which calls a locally hosted Flask web server for computer vision and move validation functionality.
